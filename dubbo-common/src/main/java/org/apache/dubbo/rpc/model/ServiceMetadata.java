@@ -32,12 +32,18 @@ public class ServiceMetadata extends BaseServiceMetadata {
 
     private String defaultGroup;
     private Class<?> serviceType;
-
+    /**
+     * 返回值
+     */
     private Object target;
 
-    /* will be transferred to remote side */
+    /**
+     * 隐式传参
+     */
     private final Map<String, Object> attachments = new ConcurrentHashMap<String, Object>();
-    /* used locally*/
+    /**
+     * 传递dubbo 方法参数值
+     */
     private final Map<String, Object> attributeMap = new ConcurrentHashMap<String, Object>();
 
     public ServiceMetadata(String serviceInterfaceName, String group, String version, Class<?> serviceType) {

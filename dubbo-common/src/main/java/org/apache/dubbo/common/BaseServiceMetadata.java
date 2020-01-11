@@ -19,11 +19,13 @@ package org.apache.dubbo.common;
 import org.apache.dubbo.common.utils.StringUtils;
 
 /**
- * 2019-10-10
+ *  提供者元数据信息
  */
 public class BaseServiceMetadata {
     public static final char COLON_SEPERATOR = ':';
-
+    /**
+     * 组册 url
+     */
     protected String serviceKey;
     protected String serviceInterfaceName;
     protected String version;

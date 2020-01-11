@@ -40,7 +40,7 @@ import org.springframework.context.ApplicationContextAware;
 import static org.springframework.beans.factory.BeanFactoryUtils.beansOfTypeIncludingAncestors;
 
 /**
- * ReferenceFactoryBean
+ * 工厂bean
  */
 public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         ApplicationContextAware, InitializingBean, DisposableBean {
@@ -63,6 +63,10 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         SpringExtensionFactory.addApplicationContext(applicationContext);
     }
 
+    /**
+     * 在获取 实例的时候，工厂bean调用这个方法
+     * @return
+     */
     @Override
     public Object getObject() {
         return get();

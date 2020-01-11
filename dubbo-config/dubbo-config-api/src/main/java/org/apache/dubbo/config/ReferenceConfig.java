@@ -175,7 +175,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         invoker = null;
         ref = null;
 
-        // dispatch a ReferenceConfigDestroyedEvent since 2.7.4
+        // dispatch a ReferenceConfigDestroyedEvøent since 2.7.4
         dispatch(new ReferenceConfigDestroyedEvent(this));
     }
 
@@ -250,6 +250,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
 
         serviceMetadata.getAttachments().putAll(map);
 
+        // 创建代理对象
         ref = createProxy(map);
 
         serviceMetadata.setTarget(ref);
@@ -265,7 +266,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
-    private T createProxy(Map<String, String> map) {
+    private T  createProxy(Map<String, String> map) {
         if (shouldJvmRefer(map)) {
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
             invoker = REF_PROTOCOL.refer(interfaceClass, url);
@@ -310,6 +311,9 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
             }
 
             if (urls.size() == 1) {
+                // 远程引用接口 ->
+                // 1. org.apache.dubbo.registry.integration.RegistryProtocol.refer
+                // 2. DubboProtocol refer()
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
@@ -349,6 +353,7 @@ public class ReferenceConfig<T> extends ReferenceConfigBase<T> {
         /**
          * @since 2.7.0
          * ServiceData Store
+         * 存储了 消费这地址信息
          */
         String metadata = map.get(METADATA_KEY);
         WritableMetadataService metadataService = WritableMetadataService.getExtension(metadata == null ? DEFAULT_METADATA_STORAGE_TYPE : metadata);

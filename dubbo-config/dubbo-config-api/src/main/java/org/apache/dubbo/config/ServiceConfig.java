@@ -100,25 +100,34 @@ import static org.apache.dubbo.rpc.Constants.SCOPE_REMOTE;
 import static org.apache.dubbo.rpc.Constants.TOKEN_KEY;
 import static org.apache.dubbo.rpc.cluster.Constants.EXPORT_KEY;
 
+/**
+ * 服务提供方的配置信息
+ * @param <T>
+ */
 public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
     public static final Logger logger = LoggerFactory.getLogger(ServiceConfig.class);
 
     /**
-     * A random port cache, the different protocols who has no port specified have different random port
+     * key : 协议
+     * value : 端口
      */
     private static final Map<String, Integer> RANDOM_PORT_MAP = new HashMap<String, Integer>();
 
     /**
-     * A delayed exposure service timer
+     * 延迟暴露定时任务
      */
     private static final ScheduledExecutorService DELAY_EXPORT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("DubboServiceDelayExporter", true));
 
+    /**
+     * 获取当前默认配置的协议
+     * 默认 Dubbo
+     */
     private static final Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();
 
     /**
-     * A {@link ProxyFactory} implementation that will generate a exported service proxy,the JavassistProxyFactory is its
-     * default implementation
+     * 获取当前默认配置的代理工厂生成方式
+     * 默认 ： javassist
      */
     private static final ProxyFactory PROXY_FACTORY = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension();
 
@@ -132,6 +141,9 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      */
     private transient volatile boolean unexported;
 
+    /**
+     * springboot 启动类
+     */
     private DubboBootstrap bootstrap;
 
     /**
@@ -179,7 +191,11 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         dispatch(new ServiceConfigUnexportedEvent(this));
     }
 
+    /**
+     * 暴露服务
+     */
     public synchronized void export() {
+        // 获取配置 dubbo.export 属性值
         if (!shouldExport()) {
             return;
         }
@@ -200,8 +216,10 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         serviceMetadata.setTarget(getRef());
 
         if (shouldDelay()) {
+            // 延迟暴露放到定时任务中
             DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
         } else {
+            // 直接暴露
             doExport();
         }
     }
@@ -284,6 +302,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (StringUtils.isEmpty(path)) {
             path = interfaceName;
         }
+        // 继续暴露
         doExportUrls();
 
         // dispatch a ServiceConfigExportedEvent since 2.7.4
@@ -302,8 +321,10 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 serviceMetadata
         );
 
+        // 获取注册中心地址
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
+        // 根据每种协议生成不同的 组册url
         for (ProtocolConfig protocolConfig : protocols) {
             String pathKey = URL.buildKey(getContextPath(protocolConfig)
                     .map(p -> p + "/" + path)
@@ -312,12 +333,14 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
             repository.registerService(pathKey, interfaceClass);
             // TODO, uncomment this line once service key is unified
             serviceMetadata.setServiceKey(pathKey);
+            // 带着协议去暴露
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
     }
 
     private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
         String name = protocolConfig.getName();
+        // 默认使用Dubbo协议
         if (StringUtils.isEmpty(name)) {
             name = DUBBO;
         }
@@ -464,9 +487,15 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                             registryURL = registryURL.addParameter(PROXY_KEY, proxy);
                         }
 
+                        // 根据代理工长获取当前服务的 invoker
                         Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
 
+
+                        // 暴露接口
+                        // 1. 先到 org.apache.dubbo.registry.integration.RegistryProtocol.export()
+                        //
+                        // 2. 再到 org.apache.dubbo.rpc.protocol.dubbo.DubboProtocol.export()
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         exporters.add(exporter);
                     }

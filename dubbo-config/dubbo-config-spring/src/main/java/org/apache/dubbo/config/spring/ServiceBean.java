@@ -33,12 +33,15 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 
 /**
- * ServiceFactoryBean
+ * 实现了InitializingBean 接口, bean属性设置完会回调这个方法
+ * DisposableBean Bean销毁后回回调
+ * 都是Bean生命周期的方法
  *
  * @export
  */
 public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean, DisposableBean,
         ApplicationContextAware, BeanNameAware,
+        // IOC容器刷新完成事件
         ApplicationEventPublisherAware {
 
 
@@ -84,6 +87,7 @@ public class ServiceBean<T> extends ServiceConfig<T> implements InitializingBean
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        // 配置service的全限定名
         if (StringUtils.isEmpty(getPath())) {
             if (StringUtils.isNotEmpty(beanName)
                     && StringUtils.isNotEmpty(getInterface())
