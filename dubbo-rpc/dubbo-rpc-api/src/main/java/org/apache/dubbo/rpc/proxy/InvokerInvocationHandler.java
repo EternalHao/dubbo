@@ -37,6 +37,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 执行代理对象
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
@@ -56,7 +57,8 @@ public class InvokerInvocationHandler implements InvocationHandler {
         }
         RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), args);
         rpcInvocation.setTargetServiceUniqueName(invoker.getUrl().getServiceKey());
-
+        // 封装为Rpc调用
+        // org.apache.dubbo.rpc.cluster.support.wrapper.MockClusterInvoker.invoke
         return invoker.invoke(rpcInvocation).recreate();
     }
 }

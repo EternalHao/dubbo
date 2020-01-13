@@ -248,10 +248,12 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         if (contextAttachments != null && contextAttachments.size() != 0) {
             ((RpcInvocation) invocation).addAttachments(contextAttachments);
         }
-
+        // 获取所有的服务器端所有的可执行的Invoker
         List<Invoker<T>> invokers = list(invocation);
+        // 执行负载均衡策略
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+        // FailoverClusterInvoker 失败重试
         return doInvoke(invocation, invokers, loadbalance);
     }
 
@@ -303,6 +305,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
             return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(invokers.get(0).getUrl()
                     .getMethodParameter(RpcUtils.getMethodName(invocation), LOADBALANCE_KEY, DEFAULT_LOADBALANCE));
         } else {
+            // 缺省参数 负载均衡是 随机
             return ExtensionLoader.getExtensionLoader(LoadBalance.class).getExtension(DEFAULT_LOADBALANCE);
         }
     }
